@@ -118,18 +118,20 @@ phase2_model() {
   fi
 
   mkdir -p "$MODEL_DIR"
-  log "Downloading $MODEL_REPO (~23 GB) using hf_transfer..."
+  # hf download must run as the invoking user, not root
+  REAL_USER="${SUDO_USER:-$(whoami)}"
+  chown -R "${REAL_USER}:${REAL_USER}" "$MODEL_DIR"
+  log "Downloading $MODEL_REPO (~23 GB)..."
 
   HF_ARGS=(
     hf download "$MODEL_REPO"
     --local-dir "$MODEL_DIR"
     --include "$MODEL_FILE"
     --include "$MMPROJ_FILE"
-    --local-dir-use-symlinks False
   )
   [[ -n "$HF_TOKEN" ]] && HF_ARGS+=(--token "$HF_TOKEN")
 
-  HF_XET_HIGH_PERFORMANCE=1 "${HF_ARGS[@]}" || die "Model download failed. Check network or set HF_TOKEN if needed."
+  HF_XET_HIGH_PERFORMANCE=1 sudo -u "${REAL_USER}" "${HF_ARGS[@]}" || die "Model download failed. Check network or set HF_TOKEN if needed."
 
   [[ -f "$FULL_MODEL_PATH" ]] || die "Model file not found after download: $FULL_MODEL_PATH"
   [[ -f "$FULL_MMPROJ_PATH" ]] || warn "mmproj not found — will run without vision support."
