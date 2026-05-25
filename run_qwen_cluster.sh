@@ -83,16 +83,17 @@ phase1_preflight() {
     die "Docker GPU passthrough failed. Check: docker run --rm --device nvidia.com/gpu=all $DOCKER_IMAGE --version"
   fi
 
-  # huggingface-cli
-  if ! command -v huggingface-cli &>/dev/null; then
+  # hf CLI (huggingface_hub)
+  if ! command -v hf &>/dev/null; then
     log "Installing huggingface-hub..."
-    pip install -q --root-user-action=ignore huggingface-hub hf_transfer
-    ok "huggingface-cli installed"
+    pip install -q --root-user-action=ignore huggingface-hub
+    ok "hf CLI installed"
   else
-    ok "huggingface-cli already present"
+    ok "hf CLI already present"
   fi
 
-  export HF_HUB_ENABLE_HF_TRANSFER=1
+  # Enable Xet high-performance transfer
+  export HF_XET_HIGH_PERFORMANCE=1
 }
 
 # =============================================================================
@@ -120,7 +121,7 @@ phase2_model() {
   log "Downloading $MODEL_REPO (~23 GB) using hf_transfer..."
 
   HF_ARGS=(
-    huggingface-cli download "$MODEL_REPO"
+    hf download "$MODEL_REPO"
     --local-dir "$MODEL_DIR"
     --include "$MODEL_FILE"
     --include "$MMPROJ_FILE"
@@ -128,7 +129,7 @@ phase2_model() {
   )
   [[ -n "$HF_TOKEN" ]] && HF_ARGS+=(--token "$HF_TOKEN")
 
-  "${HF_ARGS[@]}" || die "Model download failed. Check network or set HF_TOKEN if needed."
+  HF_XET_HIGH_PERFORMANCE=1 "${HF_ARGS[@]}" || die "Model download failed. Check network or set HF_TOKEN if needed."
 
   [[ -f "$FULL_MODEL_PATH" ]] || die "Model file not found after download: $FULL_MODEL_PATH"
   [[ -f "$FULL_MMPROJ_PATH" ]] || warn "mmproj not found — will run without vision support."
