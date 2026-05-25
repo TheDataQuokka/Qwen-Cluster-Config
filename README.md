@@ -3,7 +3,7 @@
 One-script setup for a **Qwen3.6-35B-A3B MTP** load-balanced inference cluster on a single A100 80GB. Curl it onto any fresh Ubuntu GPU instance and have a production-ready OpenAI-compatible endpoint running in under 10 minutes (model download aside).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOU/qwen-cluster/main/run_qwen_cluster.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/TheDataQuokka/Qwen-Cluster-Config/main/run_qwen_cluster.sh | sudo bash
 ```
 
 ---
